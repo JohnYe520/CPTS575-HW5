@@ -1,0 +1,99 @@
+---
+title: "JohnYe_HW5Part2"
+author: "John Ye"
+date: "2024-10-29"
+output: word_document
+---
+```{r}
+library(tokenizers)
+library(SnowballC)
+library(tm)
+library(quanteda)
+library(tidyverse)
+```
+## 1. Tokenization
+```{r}
+# Read the data from the csv file
+news <- read.csv("bbc.csv")
+#head(news)
+
+# Tokenize the news
+# create a vector containing only text
+text <- news$text
+# create a corpus
+corpus <- VCorpus(VectorSource(text))
+
+corpus <- corpus %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(content_transformer(wordStem), language = "en")
+
+# Create Document-Term Matrix
+dtm <- DocumentTermMatrix(corpus)
+dtmMatrix <- as.matrix(dtm)
+
+# Get the frequency of the works
+frequencies <- colSums(dtmMatrix)
+
+# Remove 15% of the words with the least frequency in the document
+leastWord <- quantile(frequencies, probs = 0.15)
+dtmMatrix <- dtmMatrix[,frequencies > leastWord]
+
+# print the feature vector of the words that are appear 4 or more times in the 2205th article in the dataset
+article <- dtmMatrix[2205, ]
+featureVector <- article[article >= 4]
+print(featureVector)
+```
+
+## 2. Classification
+```{r}
+library(e1071)
+library(nnet)
+library(caret)
+
+# Reduce the features set by removing highly correlated features
+dtmDataFrame <- as.data.frame(dtmMatrix)
+correlatedFeature <- cor(dtmDataFrame)
+highCorrelation <- findCorrelation(correlatedFeature, cutoff = 0.99)
+newDTM <- dtmDataFrame[, -highCorrelation]
+newDTM$category <- news$category
+```
+
+## Naive Bayes
+```{r}
+# Split the data where 80% for training and 20% for testing
+set.seed(1)
+trainIndex <- createDataPartition(newDTM$category, p=0.8, list = FALSE)
+train <- newDTM[trainIndex, ]
+test <- newDTM[-trainIndex, ]
+X_train <- train[, -ncol(train)]
+y_train <- train$category
+X_test <- test[, -ncol(test)]
+y_test <- test$category
+
+# Build a Multinomial Naive Bayes classifier
+nb.fit <- naiveBayes(X_train, y_train, laplace = 1)
+#nb.fit
+
+# Predict using test data
+nb.class <- predict(nb.fit, X_test)
+# Print a confusion matrix
+y_test <- factor(y_test)
+nb.class <- factor(nb.class, levels = levels(y_test))
+nb.matrix <- confusionMatrix(nb.class, y_test)
+print(nb.matrix$byClass[, c("Precision", "Recall")])
+```
+## Logistic Regression (gives me a "protection stack overflow" error)
+#```{r}
+#lr.fit <- multinom(category ~ ., data = X_train, MaxNWts = 50000)
+#lr.class <- predict(lr.fit, X_test)
+#y_test <- factor(y_test)
+#lr.class <- factor(lr.class, levels = levels(y_test))
+#lr.matrix <-confusionMatrix(lr.class, y_test)
+#print(lr.matrix$byClass[, c("Precision", "Recall")])
+#```
+
+## Problem with Logistic Regression
+* The logistic regression gave me a protection stack overflow error. I tried to use "MaxNWts" to limits the number of weights, use "glmnet", and PCA, but none of these methods worked.

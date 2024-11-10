@@ -1,0 +1,164 @@
+---
+title: "JohnYe_HW5Part1"
+author: "John Ye"
+date: "2024-10-20"
+output:
+  word_document: default
+---
+## 1. Read data from winequality-red.csv
+```{r}
+wine_data <- read.csv("winequality-red.csv")
+head(wine_data)
+```
+
+## 1.a Linear regression with pH as the response and all other variables except citric_acid as the predictors.
+```{r}
+# Linear regression with pH and all other variables except citric_acid
+lm_WineRegression <- lm(pH~fixed_acidity + volatile_acidity + residual_sugar + chlorides + free_sulfur_dioxide + total_sulfur_dioxide + density + sulphates + alcohol + quality, data = wine_data)
+summary(lm_WineRegression)
+```
+## i). Which predictors appear to have a statistically significant relationship to response? How to determine this?
+* All variables except volatile_acidity (and citric_acid since there are not linear regression with it) appear to have a significant relationship to response, since there are significance codes, *** or *, after those predictors which indicate they have a statistically significant relationship to response. However, for volatile_acidity, since there is no symbol for significance codes, it is not a significant predictor.
+
+## ii). What does the coefficient for the free_sulfur_dioxide variable suggest, in simple terms?
+* The coefficient for the free_sulfur_dioxide, which is 1.654e-03, suggests that if free_sulfur_dioxide is changed by 1, the pH will increase by 1.654e-03 (0.001654).
+
+## 1.b Produce diagnostic plots of the linear regression fit. Any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
+```{r}
+par(mfrow = c(2,2))
+plot(lm_WineRegression)
+```
+## Analysis
+* Based on the graphs, we can see that there are some unusually large outliers such as 724, 1317 and 1322. The leverage plot also identify some unusually high leverage such as 292 and 152.
+
+## 1.c Fit at least 3 linear regression models with alcohol as the response and some combination of other variables as predictors. Do any iteractions apppear to be statistically significant?
+```{r}
+# Alcohol VS. Residual Sugar with pH
+lm.fit1 = lm(alcohol ~ residual_sugar * pH, data = wine_data)
+summary(lm.fit1)
+```
+* The interaction between residual_sugar with pH appear to be statistically significant.
+
+```{r}
+# Alcohol VS. Free Sulfur Dioxide with Total Sulfur Dioxide
+lm.fit2 = lm(alcohol ~ free_sulfur_dioxide * total_sulfur_dioxide, data = wine_data)
+summary(lm.fit2)
+```
+* The interaction between free_sulfur_dioxide and total_sulfur_dioxide appear to be not statistically significant.
+
+```{r}
+# Alcohol VS. Chlorides with free Sulfur Dioxide
+lm.fit3 = lm(alcohol ~ chlorides * free_sulfur_dioxide, data = wine_data)
+summary(lm.fit3)
+```
+* The interaction between chlorides and free_sulfur_dioxide appear to be statistically significant.
+
+## 2. Read data from boston.csv
+```{r}
+boston <- read.csv("boston.csv")
+head(boston)
+```
+## 2.a For each predictor, fit a simple linear regression model to predict the response. Include the code not the output.
+```{r}
+# crim VS. zn
+lm_zn <- lm(crim~zn, data = boston)
+#summary(lm_zn)
+
+# crim VS. indus
+lm_indus <- lm(crim~indus, data = boston)
+#summary(lm_indus)
+
+# crim VS. chas
+lm_chas <- lm(crim~chas, data = boston)
+#summary(lm_chas)
+
+# crim VS. nox
+lm_nox <- lm(crim~nox, data = boston)
+#summary(lm_nox)
+
+# crim VS. rm
+lm_rm <- lm(crim~rm, data = boston)
+#summary(lm_rm)
+# crim VS. age
+lm_age <- lm(crim~age, data = boston)
+#summary(lm_age)
+
+# crim VS. dis
+lm_dis <- lm(crim~dis, data = boston)
+#summary(lm_dis)
+
+# crim VS. rad
+lm_rad <- lm(crim~rad, data = boston)
+#summary(lm_rad)
+
+# crim VS. tax
+lm_tax <- lm(crim~tax, data = boston)
+#summary(lm_tax)
+
+# crim VS. ptratio
+lm_ptratio <- lm(crim~ptratio, data = boston)
+#summary(lm_ptratio)
+
+# crim VS. black
+lm_black <- lm(crim~black, data = boston)
+#summary(lm_black)
+
+# crim VS. lstat
+lm_lstat <- lm(crim~lstat, data = boston)
+#summary(lm_lstat)
+
+# crim VS. medv
+lm_medv <- lm(crim~medv, data = boston)
+#summary(lm_medv)
+```
+## In which of the models is there a statistically significant association between the predictor and the response?
+* Based on the result, models with zn, indus, nox, rm, age, dis, rad, tax, ptratio, black, lstat and medv have a statistically significant association between the predictor and thre response.
+
+## Consider the relationship between crim and each of the predictor nox, chas, rm, dis and medv. How do these relationships differ?
+* nox is the nitric oxides concentration, which reprsents the level of industrial pollutants in the area. Since nox has a statistically significant relationship with crim, it indicate that the area with higher pollution level tend to have a higher crime rate.
+
+* chas is the Charles River dummy variable, which indicates whether the property is near the Charles River. In this case, chas has no statistically significant relationship with crim.
+
+* rm is the average number of rooms per dwelling. Since rm has a statistically significant relationship with crim, and the estimate value is negative. It indicates when the average number of rooms is increasing, the number of crime tend to decrease. 
+
+* dis is the weighted distances to five Boston employment centers. Since dis has a statistically significant relationship with crim, and the estimate value is negative. It indicates when the distance to five Boston employment centers is increasing, the number of crime tend to decrease. 
+
+* medv is the median value of owner-occupied homes. Since medv has a statistically significant relationship with crim, and the estimate value is negative. It indicates when the median value of owner-occupied homes is increasing, the number of crime tend to decrease. 
+
+## 2.c Fit a multiple regression model to predict the response using all the predictors. For which predictors can we reject the null hypothesis?
+```{r}
+lm_boston <- lm(crim~zn + indus + chas + nox + rm + age + dis + rad + tax + ptratio + black + lstat + medv, data = boston)
+summary(lm_boston)
+```
+## Analysis
+* Based on the summary, we can see that zn, dis, rad, black, and medv have a statistically significant relationship with crim. Where zn and rad have a positive significant replationship, dis, black and medv have a negative significant relationship. For nox and lstat, they have borderline significant.
+
+* By reject the null hypothesis, we first choose to use a significance level of 0.05, which means all predictors with p-value less than 0.05 will be considered to be rejected. By looking at the result, zn, dis, rad, black and medv have p-value less than 0.05, therefore, there five predictors will be rejected.
+
+## 2.d Compare results from (a) to (c)
+```{r}
+library(knitr)
+compareAtoC <- data.frame(
+  Predictors = c("zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "black", "lstat", "medv"),
+  Significance_SimpleRegression = c("Y", "Y", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y"),
+  Significance_MultipleRegression = c("Y", "N", "N", "Y", "N", "N", "Y", "Y", "N", "N", "Y", "Y", "Y")
+)
+kable(compareAtoC, align = 'c', caption = "Comparison of Simple and Multiple Regression")
+```
+## Analysis
+* From the comparison table, we can see that some of the predictors have a statistically significant relationship with crim in both simple and multiply regression, such as: zn, nox, dis, rad, black, lstat and medv. 
+
+## 2.e Is there evidence of non-linear association between the predictors age and tax and the response crim?
+```{r}
+# crim VS. age
+lm_age <- lm(crim~poly(age, 3), data = boston)
+summary(lm_age)
+
+#crim VS. tax
+lm_tax <- lm(crim~poly(tax, 3), data = boston)
+summary(lm_tax)
+```
+
+## Analysis
+* From the result for age, we can see that all results are significant which indicates a non-linear association between age and crim.
+* From the result for tax, we can see that only the first two are significant, the third one is not. It indicates that there are non-linearn association between tax and crim, however, the ralationship is only most likely to be found in quadratic term, not cubic term.
